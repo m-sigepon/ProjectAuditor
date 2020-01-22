@@ -51,7 +51,7 @@ namespace Unity.ProjectAuditor.Editor
             m_ProblemDescriptors.Add(descriptor);
         }
 
-        public void Audit(ProjectReport projectReport, IProgressBar progressBar = null)
+        public void Audit(ProjectAuditorConfig config, ProjectReport projectReport, IProgressBar progressBar = null)
         {
             if (progressBar != null)
                 progressBar.Initialize("Analyzing Settings", "Analyzing project settings", m_ProblemDescriptors.Count);

@@ -81,7 +81,7 @@ namespace Unity.ProjectAuditor.Editor
             var projectReport = new ProjectReport(); 
             foreach (var auditor in m_Auditors)
             {
-                auditor.Audit(projectReport, progressBar);
+                auditor.Audit(m_ProjectAuditorConfig, projectReport, progressBar);
             }
 
             return projectReport;

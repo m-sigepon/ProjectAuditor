@@ -5,7 +5,6 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Unity.ProjectAuditor.Editor.Utils;
-using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
@@ -22,15 +21,9 @@ namespace Unity.ProjectAuditor.Editor
 
         private readonly List<IInstructionAnalyzer> m_InstructionAnalyzers = new List<IInstructionAnalyzer>();
         private readonly List<OpCode> m_OpCodes = new List<OpCode>();
-        private readonly UnityEditor.Compilation.Assembly[] m_PlayerAssemblies;  
         
         public ScriptAuditor()
         {
-#if UNITY_2018_1_OR_NEWER
-            m_PlayerAssemblies = CompilationPipeline.GetAssemblies(AssembliesType.Player);
-#else
-            m_PlayerAssemblies = CompilationPipeline.GetAssemblies().Where(a => a.flags != AssemblyFlags.EditorAssembly).ToArray();
-#endif
         }
 
         public IEnumerable<ProblemDescriptor> GetDescriptors()
@@ -38,24 +31,9 @@ namespace Unity.ProjectAuditor.Editor
             return m_ProblemDescriptors;
         }
 
-        public IEnumerable<string> GetAssemblyNames()
+        public void Audit(ProjectAuditorConfig config, ProjectReport projectReport, IProgressBar progressBar = null)
         {
-            if (m_AssemblyNames != null)
-                return m_AssemblyNames;
-
-            var names = new List<string>();
-            foreach (var assembly in m_PlayerAssemblies)
-            {
-                names.Add(assembly.name);
-            }
-
-            m_AssemblyNames = names.ToArray();
-            return m_AssemblyNames;
-        }
-
-        public void Audit( ProjectReport projectReport, IProgressBar progressBar = null)
-        {
-            if (!AssemblyHelper.CompileAssemblies())
+            if (!AssemblyHelper.CompileAssemblies(config.enablePackages))
                 return;
 
             var callCrawler = new CallCrawler();                
@@ -80,9 +58,9 @@ namespace Unity.ProjectAuditor.Editor
                 }
                 
                 if (progressBar != null)
-                    progressBar.Initialize("Analyzing Scripts", "Analyzing project scripts", m_PlayerAssemblies.Length);
+                    progressBar.Initialize("Analyzing Scripts", "Analyzing project scripts", compiledAssemblyPaths.Count());
 
-                // Analyse all Player assemblies, including Package assemblies.
+                // Analyse all Player assemblies
                 foreach (var assemblyPath in compiledAssemblyPaths)
                 {
                     if (progressBar != null)
